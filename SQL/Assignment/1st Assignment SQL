@@ -1,0 +1,116 @@
+USE Demo; // database
+
+// 1. Load the given dataset into snowflake with a primary key to Order Date column.
+
+Create or Replace Table Car_Sales_A1
+ ( Order_id	Varchar(50),
+  Order_date Date not null primary key,
+  Ship_date	Date,
+  Ship_mode	 varchar(80),
+  Customer_name varchar(80),	
+  Segment	varchar(40),
+  State varchar(80),
+  Country varchar(50),
+  Market varchar(40),
+  Region varchar(50),
+  Product_id varchar(70),
+  Category varchar(50),
+  Sub_category varchar(70),
+  Product_name string,
+  Sales number(10,5),
+  Quantity number(10,5),
+  Discount float,
+  Profit float,
+  Shipping_cost float,
+  Order_priority varchar(40),
+  Year int );
+  
+  
+DESCRIBE TABLE Car_Sales_A1; // Describe the columns with the data types and primary key
+ 
+ 
+SELECT * FROM Car_SaleS_A1;
+
+SELECT GET_DDL ('TABLE','Car_Sales_A1');
+
+// 2. Change the Primary key to Order Id Column.
+
+ALTER TABLE Car_Sales_A1
+Drop PRIMARY KEY;
+
+ALTER TABLE Car_Sales_A1 
+ADD PRIMARY KEY (Order_id);
+
+
+SHOW PRIMARY KEYS IN Car_Sales_A1;
+
+// 3. Check the data type for Order date and Ship date and mention in what data type it should be?
+ // Answer -  Date in the original data was in DD-MM-YYYY and I cleaned the data in format that is accepted in snowflake (YYYY-MM-DD) which will reflect in describe command and select command.
+ 
+ DESCRIBE TABLE Car_Sales_A1; 
+ 
+ SELECT * FROM Car_Sales_A1;
+
+//4. Create a new column called order_extract and extract the number after the last ‘–‘from Order ID column.
+
+ ALTER TABLE Car_Sales_A1
+ADD COLUMN Order_extract varchar(15);
+
+UPDATE Car_Sales_A1
+SET Order_extract = SUBSTR(order_id ,9, 10);
+
+//OR 
+
+UPDATE Car_Sales_A1
+SET Order_extract = Split_part(Order_id,'-',-1);
+
+SELECT * FROM Car_Sales_A1;
+
+// 5. Create a new column called Discount Flag and categorize it based on discount.Use ‘Yes’ if the discount is greater than zero else ‘No’.
+
+Alter table Car_Sales_A1
+ADD Column Discount_flag varchar(15);
+
+Update Car_Sales_A1
+SET Discount_flag = Case When Discount>0 Then 'Yes' 
+                    Else 'No' 
+                    End;
+
+SELECT * FROM Car_Sales_A1;
+
+//6. Create a new column called process days and calculate how many days it takes for each order id to process from the order to its shipment.
+
+Alter Table Car_Sales_A1
+ADD Column Process_day int;
+
+SELECT DATEDIFF('Day', ORDER_DATE ,SHIP_DATE ) as Process_days from Car_Sales_A1; 
+
+//OR
+
+UPDATE Car_Sales_A1
+SET Process_day = DATEDIFF('day', ORDER_DATE ,SHIP_DATE );
+
+SELECT Process_day from Car_Sales_A1;
+
+///// 7. Create a new column called Rating and then based on the Process dates give rating like given below.
+//a. If process days less than or equal to 3days then rating should be 5
+//b. If process days are greater than 3 and less than or equal to 6 then rating should be 4
+//c. If process days are greater than 6 and less than or equal to 10 then rating should be 3
+//d. If process days are greater than 10 then the rating should be 2.
+
+ALTER TABLE Car_Sales_A1
+ADD Column Rating int;
+
+SELECT * FROM Car_Sales_A1;
+
+    
+UPDATE Car_Sales_A1
+SET Rating = Case When Process_day <= 3 Then 5
+    When Process_day > 3 <= 6 Then 4
+    When Process_day > 6 >= 10 Then 3
+    Else 2
+    End;
+    
+SELECT Discount_flag,Process_day,Rating FROM Car_Sales_A1;
+
+
